@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}管理员仪表板 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt"></i> 管理员仪表板</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshStats()">
+                <i class="fas fa-sync-alt"></i> 刷新数据
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            总用户数
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            学生总数
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            课程总数
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_courses }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            成绩记录
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_grades }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 最近注册的学生 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user-graduate"></i> 最近注册的学生
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_students %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>学号</th>
+                                    <th>姓名</th>
+                                    <th>专业</th>
+                                    <th>注册时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in recent_students %}
+                                <tr>
+                                    <td>{{ student.student_id }}</td>
+                                    <td>{{ student.user.full_name }}</td>
+                                    <td>{{ student.major }}</td>
+                                    <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">暂无学生数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近添加的课程 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-book"></i> 最近添加的课程
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_courses %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>课程代码</th>
+                                    <th>课程名称</th>
+                                    <th>教师</th>
+                                    <th>添加时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in recent_courses %}
+                                <tr>
+                                    <td>{{ course.course_code }}</td>
+                                    <td>{{ course.course_name }}</td>
+                                    <td>{{ course.teacher_name }}</td>
+                                    <td>{{ course.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">暂无课程数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速操作 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-bolt"></i> 快速操作
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-primary btn-block w-100">
+                            <i class="fas fa-users"></i><br>
+                            用户管理
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_students') }}" class="btn btn-success btn-block w-100">
+                            <i class="fas fa-user-graduate"></i><br>
+                            学生管理
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_courses') }}" class="btn btn-info btn-block w-100">
+                            <i class="fas fa-book"></i><br>
+                            课程管理
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin_grades') }}" class="btn btn-warning btn-block w-100">
+                            <i class="fas fa-chart-line"></i><br>
+                            成绩管理
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 系统状态 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-server"></i> 系统状态
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">数据库状态</label>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%">正常</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">在线用户</label>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 75%">2/10</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">系统负载</label>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 45%">45%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>当前时间:</strong> <span id="current-time"></span></p>
+                        <p class="mb-1"><strong>系统版本:</strong> v1.0.0</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Python版本:</strong> 3.9+</p>
+                        <p class="mb-1"><strong>数据库:</strong> SQLite</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function refreshStats() {
+    // 刷新统计数据
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            // 更新统计数字
+            console.log('统计数据已更新:', data);
+            location.reload(); // 简单刷新页面
+        })
+        .catch(error => {
+            console.error('刷新失败:', error);
+            alert('刷新失败，请稍后重试');
+        });
+}
+
+// 页面加载时显示当前时间
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('current-time').textContent = timeString;
+}
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+{% endblock %}

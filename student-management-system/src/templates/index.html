@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <div class="container text-center">
+                <h1 class="display-4">学生信息管理系统</h1>
+                <p class="lead">高校学生信息管理平台</p>
+                <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+                <p>提供完整的学生信息管理、课程管理、成绩管理等核心功能</p>
+                
+                {% if not current_user.is_authenticated %}
+                <div class="mt-4">
+                    <a class="btn btn-light btn-lg me-3" href="{{ url_for('login') }}" role="button">
+                        <i class="fas fa-sign-in-alt"></i> 立即登录
+                    </a>
+                    <a class="btn btn-outline-light btn-lg" href="{{ url_for('register') }}" role="button">
+                        <i class="fas fa-user-plus"></i> 免费注册
+                    </a>
+                </div>
+                {% else %}
+                <div class="mt-4">
+                    {% if current_user.is_admin %}
+                    <a class="btn btn-light btn-lg" href="{{ url_for('admin_dashboard') }}" role="button">
+                        <i class="fas fa-tachometer-alt"></i> 管理控制台
+                    </a>
+                    {% else %}
+                    <a class="btn btn-light btn-lg" href="{{ url_for('student_dashboard') }}" role="button">
+                        <i class="fas fa-user-graduate"></i> 我的仪表板
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 功能特色 -->
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">用户管理</h5>
+                <p class="card-text">完整的用户注册、登录和权限管理系统，支持管理员和学生两种角色</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-graduate fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">学生管理</h5>
+                <p class="card-text">详细的学生档案管理，包括基本信息、联系方式、紧急联系人等</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-book fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">课程管理</h5>
+                <p class="card-text">完整的课程信息管理，包括课程代码、名称、学分、教师等信息</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-chart-line fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">成绩管理</h5>
+                <p class="card-text">全面的成绩记录和管理，支持期中、期末、作业等各类成绩统计</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-danger"></i>
+                </div>
+                <h5 class="card-title">权限控制</h5>
+                <p class="card-text">严格的权限管理机制，确保不同角色只能访问相应的功能模块</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-mobile-alt fa-3x text-secondary"></i>
+                </div>
+                <h5 class="card-title">响应式设计</h5>
+                <p class="card-text">基于Bootstrap的响应式设计，支持桌面和移动设备访问</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 系统信息 -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> 系统信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>技术架构</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> 后端: Python Flask + SQLAlchemy</li>
+                            <li><i class="fas fa-check text-success"></i> 前端: HTML5 + CSS3 + JavaScript + Bootstrap</li>
+                            <li><i class="fas fa-check text-success"></i> 数据库: SQLite</li>
+                            <li><i class="fas fa-check text-success"></i> 认证: Flask-Login + Werkzeug</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 演示账户信息 -->
+{% if not current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <h6><i class="fas fa-lightbulb"></i> 演示账户</h6>
+            <p class="mb-2">您可以使用以下演示账户体验系统功能：</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>管理员账户:</strong><br>
+                    用户名: <code>admin</code><br>
+                    密码: <code>admin123</code>
+                </div>
+                <div class="col-md-6">
+                    <strong>学生账户:</strong><br>
+                    用户名: <code>student1</code><br>
+                    密码: <code>student123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

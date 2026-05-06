@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}编辑个人资料 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-user-edit"></i> 编辑个人资料
+        </h1>
+        <a href="{{ url_for('student_profile') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回资料页面
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-edit"></i> 修改个人信息
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3">基础信息</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">用户名</label>
+                                    <input type="text" class="form-control" id="username" 
+                                           value="{{ student_profile.user.username }}" readonly>
+                                    <small class="text-muted">用户名不可修改</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="student_id" class="form-label">学号</label>
+                                    <input type="text" class="form-control" id="student_id" 
+                                           value="{{ student_profile.student_id }}" readonly>
+                                    <small class="text-muted">学号不可修改</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="full_name" class="form-label">姓名 *</label>
+                                    <input type="text" class="form-control" id="full_name" 
+                                           name="full_name" value="{{ student_profile.user.full_name }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">联系电话</label>
+                                    <input type="text" class="form-control" id="phone" 
+                                           name="phone" value="{{ student_profile.user.phone or '' }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="major" class="form-label">专业</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ student_profile.major }}" readonly>
+                                    <small class="text-muted">专业信息不可修改</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="grade" class="form-label">年级</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ student_profile.grade }}" readonly>
+                                    <small class="text-muted">年级信息不可修改</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3">详细信息</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">家庭地址</label>
+                                    <textarea class="form-control" id="address" name="address" 
+                                              rows="3" placeholder="请输入家庭详细地址">{{ student_profile.address or '' }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="emergency_contact" class="form-label">紧急联系人</label>
+                                    <input type="text" class="form-control" id="emergency_contact" 
+                                           name="emergency_contact" 
+                                           value="{{ student_profile.emergency_contact or '' }}">
+                                    <small class="text-muted">家长或监护人姓名</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="emergency_phone" class="form-label">紧急联系电话</label>
+                                    <input type="text" class="form-control" id="emergency_phone" 
+                                           name="emergency_phone" 
+                                           value="{{ student_profile.emergency_phone or '' }}">
+                                    <small class="text-muted">家长或监护人电话</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="class_name" class="form-label">班级</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ student_profile.class_name or '-' }}" readonly>
+                                    <small class="text-muted">班级信息不可修改</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="enrollment_date" class="form-label">入学日期</label>
+                                    <input type="date" class="form-control" 
+                                           value="{{ student_profile.enrollment_date.strftime('%Y-%m-%d') }}" readonly>
+                                    <small class="text-muted">入学日期不可修改</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('student_profile') }}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 保存修改
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 密码修改提示 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-left-warning shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="text-warning mb-1">
+                                <i class="fas fa-shield-alt"></i> 密码安全
+                            </h6>
+                            <p class="mb-0 text-muted">如需修改密码，请前往密码修改页面</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('student_change_password') }}" class="btn btn-warning">
+                                <i class="fas fa-key"></i> 修改密码
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
