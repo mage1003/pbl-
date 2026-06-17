@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}我的课程 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-book"></i> 我的课程
+        </h1>
+        <div class="btn-group">
+            <a href="{{ url_for('student_profile') }}" class="btn btn-secondary">
+                <i class="fas fa-user"></i> 个人资料
+            </a>
+            <a href="{{ url_for('student_grades') }}" class="btn btn-warning">
+                <i class="fas fa-chart-line"></i> 我的成绩
+            </a>
+        </div>
+    </div>
+
+    <!-- 课程统计 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                总课程数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ courses|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                总学分
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% set total_credits = 0 %}
+                                {% for course in courses %}
+                                    {% set total_credits = total_credits + course.credits %}
+                                {% endfor %}
+                                {{ total_credits }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                活跃课程
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% set active_courses = courses|selectattr("is_active")|list|length %}
+                                {{ active_courses }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-play-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                平均学分/门
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ (total_credits / courses|length)|round(1) if courses|length > 0 else 0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 课程列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table"></i> 课程列表
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if courses %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>课程代码</th>
+                                <th>课程名称</th>
+                                <th>学分</th>
+                                <th>学期</th>
+                                <th>教师</th>
+                                <th>教室</th>
+                                <th>上课时间</th>
+                                <th>最大人数</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td><span class="badge bg-secondary">{{ course.course_code }}</span></td>
+                                <td>
+                                    <strong>{{ course.course_name }}</strong>
+                                    {% if course.description %}
+                                        <br><small class="text-muted">{{ course.description[:50] }}{% if course.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-info">{{ course.credits }}</span></td>
+                                <td>{{ course.semester }}</td>
+                                <td>{{ course.teacher_name }}</td>
+                                <td>{{ course.classroom or '-' }}</td>
+                                <td>{{ course.schedule or '-' }}</td>
+                                <td>{{ course.max_students }}</td>
+                                <td>
+                                    {% if course.is_active %}
+                                        <span class="badge bg-success">活跃</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">停用</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-book fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">暂无课程信息</h5>
+                    <p class="text-muted">您尚未选择任何课程</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 课程分类统计 -->
+    {% if courses %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie"></i> 课程统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>按学分分布</h6>
+                            {% set credit_stats = {} %}
+                            {% for course in courses %}
+                                {% set credit = course.credits %}
+                                {% if credit not in credit_stats %}
+                                    {% set _ = credit_stats.update({credit: 0}) %}
+                                {% endif %}
+                                {% set _ = credit_stats.update({credit: credit_stats[credit] + 1}) %}
+                            {% endfor %}
+                            
+                            {% for credit, count in credit_stats.items() %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>{{ credit }}学分课程</span>
+                                <span class="badge bg-primary">{{ count }}门</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>按学期分布</h6>
+                            {% set semester_stats = {} %}
+                            {% for course in courses %}
+                                {% set semester = course.semester %}
+                                {% if semester not in semester_stats %}
+                                    {% set _ = semester_stats.update({semester: 0}) %}
+                                {% endif %}
+                                {% set _ = semester_stats.update({semester: semester_stats[semester] + 1}) %}
+                            {% endfor %}
+                            
+                            {% for semester, count in semester_stats.items() %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>{{ semester }}</span>
+                                <span class="badge bg-success">{{ count }}门</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

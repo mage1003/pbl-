@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}我的成绩 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-line"></i> 我的成绩
+        </h1>
+        <div class="btn-group">
+            <a href="{{ url_for('student_profile') }}" class="btn btn-secondary">
+                <i class="fas fa-user"></i> 个人资料
+            </a>
+            <a href="{{ url_for('student_courses') }}" class="btn btn-info">
+                <i class="fas fa-book"></i> 我的课程
+            </a>
+        </div>
+    </div>
+
+    <!-- 成绩统计 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                成绩记录总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ grades|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                当前GPA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% set total_credits = 0 %}
+                                {% set weighted_score = 0 %}
+                                {% for grade in grades %}
+                                    {% if grade.total_score and grade.course.credits %}
+                                        {% set total_credits = total_credits + grade.course.credits %}
+                                        {% set weighted_score = weighted_score + grade.total_score * grade.course.credits %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ (weighted_score / total_credits)|round(2) if total_credits > 0 else 0.00 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                平均分
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% set avg_score = 0 %}
+                                {% if grades|length > 0 %}
+                                    {% set total_score = 0 %}
+                                    {% set score_count = 0 %}
+                                    {% for grade in grades %}
+                                        {% if grade.total_score %}
+                                            {% set total_score = total_score + grade.total_score %}
+                                            {% set score_count = score_count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if score_count > 0 %}
+                                        {% set avg_score = total_score / score_count %}
+                                    {% endif %}
+                                {% endif %}
+                                {{ avg_score|round(2) }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                已完成课程
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% set completed_count = 0 %}
+                                {% for grade in grades %}
+                                    {% if grade.total_score %}
+                                        {% set completed_count = completed_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ completed_count }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成绩列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table"></i> 成绩详情
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if grades %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>课程名称</th>
+                                <th>学分</th>
+                                <th>期中成绩</th>
+                                <th>期末成绩</th>
+                                <th>作业成绩</th>
+                                <th>总成绩</th>
+                                <th>等级</th>
+                                <th>学期</th>
+                                <th>更新时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>
+                                    <strong>{{ grade.course.course_name }}</strong>
+                                    <br><small class="text-muted">{{ grade.course.teacher_name }}</small>
+                                </td>
+                                <td><span class="badge bg-info">{{ grade.course.credits }}</span></td>
+                                <td>{{ grade.midterm_score or '-' }}</td>
+                                <td>{{ grade.final_score or '-' }}</td>
+                                <td>{{ grade.assignment_score or '-' }}</td>
+                                <td>
+                                    {% if grade.total_score %}
+                                        <strong class="text-primary">{{ "%.2f"|format(grade.total_score) }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">未完成</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if grade.grade_letter %}
+                                        {% set grade_colors = {
+                                            'A': 'bg-success',
+                                            'B': 'bg-info', 
+                                            'C': 'bg-warning',
+                                            'D': 'bg-danger',
+                                            'F': 'bg-dark'
+                                        } %}
+                                        <span class="badge {{ grade_colors.get(grade.grade_letter, 'bg-secondary') }}">
+                                            {{ grade.grade_letter }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ grade.semester }}</td>
+                                <td>{{ grade.updated_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">暂无成绩信息</h5>
+                    <p class="text-muted">您尚未有任何成绩记录</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 成绩分析 -->
+    {% if grades %}
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar"></i> 成绩分布
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set grade_distribution = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0} %}
+                    {% for grade in grades %}
+                        {% if grade.grade_letter and grade.grade_letter in grade_distribution %}
+                            {% set _ = grade_distribution.update({grade.grade_letter: grade_distribution[grade.grade_letter] + 1}) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><span class="badge bg-success">A</span> 优秀 (90-100分)</span>
+                            <span class="badge bg-success">{{ grade_distribution['A'] }}门</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><span class="badge bg-info">B</span> 良好 (80-89分)</span>
+                            <span class="badge bg-info">{{ grade_distribution['B'] }}门</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><span class="badge bg-warning">C</span> 中等 (70-79分)</span>
+                            <span class="badge bg-warning">{{ grade_distribution['C'] }}门</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><span class="badge bg-danger">D</span> 及格 (60-69分)</span>
+                            <span class="badge bg-danger">{{ grade_distribution['D'] }}门</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><span class="badge bg-dark">F</span> 不及格 (<60分)</span>
+                            <span class="badge bg-dark">{{ grade_distribution['F'] }}门</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-trophy"></i> 学期统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set semester_stats = {} %}
+                    {% for grade in grades %}
+                        {% set semester = grade.semester %}
+                        {% if semester not in semester_stats %}
+                            {% set _ = semester_stats.update({semester: {'count': 0, 'total_score': 0, 'total_credits': 0}}) %}
+                        {% endif %}
+                        {% if grade.total_score %}
+                            {% set _ = semester_stats.update({semester: {'count': semester_stats[semester]['count'] + 1, 'total_score': semester_stats[semester]['total_score'] + grade.total_score, 'total_credits': semester_stats[semester]['total_credits'] + grade.course.credits}}) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for semester, stats in semester_stats.items() %}
+                    <div class="mb-3">
+                        <h6>{{ semester }}</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">课程数</small>
+                                <div class="fw-bold">{{ stats['count'] }}门</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">学期GPA</small>
+                                <div class="fw-bold text-primary">
+                                    {{ (stats['total_score'] / stats['count'])|round(2) if stats['count'] > 0 else 0.00 }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

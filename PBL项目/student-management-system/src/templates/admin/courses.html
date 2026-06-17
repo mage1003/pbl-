@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}课程管理 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-book"></i> 课程管理
+        </h1>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+            <i class="fas fa-plus"></i> 添加课程
+        </button>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                课程总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ courses|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                活跃课程
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ courses|selectattr("is_active")|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 课程列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table"></i> 课程列表
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>课程代码</th>
+                            <th>课程名称</th>
+                            <th>学分</th>
+                            <th>学期</th>
+                            <th>教师</th>
+                            <th>最大人数</th>
+                            <th>教室</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.course_code }}</td>
+                            <td>{{ course.course_name }}</td>
+                            <td>{{ course.credits }}</td>
+                            <td>{{ course.semester }}</td>
+                            <td>{{ course.teacher_name }}</td>
+                            <td>{{ course.max_students }}</td>
+                            <td>{{ course.classroom or '-' }}</td>
+                            <td>
+                                {% if course.is_active %}
+                                    <span class="badge bg-success">活跃</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">停用</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" 
+                                        onclick="editCourse({{ course.id }})" 
+                                        data-bs-toggle="modal" data-bs-target="#editCourseModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning" 
+                                        onclick="toggleStatus({{ course.id }})">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="deleteCourse({{ course.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加课程模态框 -->
+<div class="modal fade" id="addCourseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加课程</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_courses_create') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="course_code" class="form-label">课程代码 *</label>
+                                <input type="text" class="form-control" id="course_code" name="course_code" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="course_name" class="form-label">课程名称 *</label>
+                                <input type="text" class="form-control" id="course_name" name="course_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">课程描述</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="credits" class="form-label">学分 *</label>
+                                <input type="number" class="form-control" id="credits" name="credits" min="1" max="10" value="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">学期 *</label>
+                                <select class="form-control" id="semester" name="semester" required>
+                                    <option value="">选择学期...</option>
+                                    <option value="2024春季">2024春季</option>
+                                    <option value="2024秋季">2024秋季</option>
+                                    <option value="2025春季">2025春季</option>
+                                    <option value="2025秋季">2025秋季</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="teacher_name" class="form-label">教师姓名 *</label>
+                                <input type="text" class="form-control" id="teacher_name" name="teacher_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="max_students" class="form-label">最大人数 *</label>
+                                <input type="number" class="form-control" id="max_students" name="max_students" min="1" value="50" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="classroom" class="form-label">教室</label>
+                                <input type="text" class="form-control" id="classroom" name="classroom">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule" class="form-label">上课时间</label>
+                        <input type="text" class="form-control" id="schedule" name="schedule" placeholder="例：周一 9:00-10:40">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑课程模态框 -->
+<div class="modal fade" id="editCourseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑课程</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editCourseForm">
+                <div class="modal-body" id="editCourseBody">
+                    <!-- 动态加载内容 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editCourse(courseId) {
+    fetch(`/admin/courses/${courseId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editCourseBody').innerHTML = data.html;
+            document.getElementById('editCourseForm').action = `/admin/courses/${courseId}/update`;
+        });
+}
+
+function toggleStatus(courseId) {
+    if (confirm('确定要切换课程状态吗？')) {
+        fetch(`/admin/courses/${courseId}/toggle`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+function deleteCourse(courseId) {
+    if (confirm('确定要删除这个课程吗？此操作不可恢复！')) {
+        fetch(`/admin/courses/${courseId}/delete`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+</script>
+{% endblock %}

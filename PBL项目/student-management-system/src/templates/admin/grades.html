@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}成绩管理 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-line"></i> 成绩管理
+        </h1>
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addGradeModal">
+            <i class="fas fa-plus"></i> 添加成绩
+        </button>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                成绩记录总数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ grades|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                平均成绩
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if grades|length > 0 %}
+                                    {{ "%.2f"|format(grades|map(attribute='total_score')|select|list|sum / grades|length) }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成绩列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table"></i> 成绩列表
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>学生</th>
+                            <th>课程</th>
+                            <th>期中成绩</th>
+                            <th>期末成绩</th>
+                            <th>作业成绩</th>
+                            <th>总成绩</th>
+                            <th>等级</th>
+                            <th>学期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td>{{ grade.id }}</td>
+                            <td>{{ grade.student.user.full_name }} ({{ grade.student.student_id }})</td>
+                            <td>{{ grade.course.course_name }}</td>
+                            <td>{{ grade.midterm_score or '-' }}</td>
+                            <td>{{ grade.final_score or '-' }}</td>
+                            <td>{{ grade.assignment_score or '-' }}</td>
+                            <td>
+                                {% if grade.total_score %}
+                                    <strong>{{ "%.2f"|format(grade.total_score) }}</strong>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if grade.grade_letter %}
+                                    {% set grade_color = {
+                                        'A': 'bg-success',
+                                        'B': 'bg-info', 
+                                        'C': 'bg-warning',
+                                        'D': 'bg-danger',
+                                        'F': 'bg-dark'
+                                    } %}
+                                    <span class="badge {{ grade_color.get(grade.grade_letter, 'bg-secondary') }}">{{ grade.grade_letter }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ grade.semester }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" 
+                                        onclick="editGrade({{ grade.id }})" 
+                                        data-bs-toggle="modal" data-bs-target="#editGradeModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning" 
+                                        onclick="recalculateGrade({{ grade.id }})">
+                                    <i class="fas fa-calculator"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="deleteGrade({{ grade.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加成绩模态框 -->
+<div class="modal fade" id="addGradeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加成绩</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_grades_create') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="student_id" class="form-label">学生 *</label>
+                                <select class="form-control" id="student_id" name="student_id" required>
+                                    <option value="">选择学生...</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.id }}">{{ student.user.full_name }} ({{ student.student_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="course_id" class="form-label">课程 *</label>
+                                <select class="form-control" id="course_id" name="course_id" required>
+                                    <option value="">选择课程...</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.course_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">学期 *</label>
+                                <select class="form-control" id="semester" name="semester" required>
+                                    <option value="">选择学期...</option>
+                                    <option value="2024春季">2024春季</option>
+                                    <option value="2024秋季">2024秋季</option>
+                                    <option value="2025春季">2025春季</option>
+                                    <option value="2025秋季">2025秋季</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="midterm_score" class="form-label">期中成绩</label>
+                                <input type="number" class="form-control" id="midterm_score" name="midterm_score" 
+                                       min="0" max="100" step="0.01">
+                            </div>
+                            <div class="mb-3">
+                                <label for="final_score" class="form-label">期末成绩</label>
+                                <input type="number" class="form-control" id="final_score" name="final_score" 
+                                       min="0" max="100" step="0.01">
+                            </div>
+                            <div class="mb-3">
+                                <label for="assignment_score" class="form-label">作业成绩</label>
+                                <input type="number" class="form-control" id="assignment_score" name="assignment_score" 
+                                       min="0" max="100" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>成绩计算规则：</strong><br>
+                            总成绩 = 期中成绩 × 30% + 期末成绩 × 50% + 作业成绩 × 20%<br>
+                            等级评定：A(≥90分), B(≥80分), C(≥70分), D(≥60分), F(<60分)
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-warning">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑成绩模态框 -->
+<div class="modal fade" id="editGradeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑成绩</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editGradeForm">
+                <div class="modal-body" id="editGradeBody">
+                    <!-- 动态加载内容 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-warning">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editGrade(gradeId) {
+    fetch(`/admin/grades/${gradeId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editGradeBody').innerHTML = data.html;
+            document.getElementById('editGradeForm').action = `/admin/grades/${gradeId}/update`;
+        });
+}
+
+function recalculateGrade(gradeId) {
+    if (confirm('确定要重新计算这个成绩吗？')) {
+        fetch(`/admin/grades/${gradeId}/recalculate`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('成绩重新计算完成！');
+                    location.reload();
+                } else {
+                    alert('计算失败：' + data.error);
+                }
+            });
+    }
+}
+
+function deleteGrade(gradeId) {
+    if (confirm('确定要删除这个成绩记录吗？此操作不可恢复！')) {
+        fetch(`/admin/grades/${gradeId}/delete`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+// 自动计算总成绩
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['midterm_score', 'final_score', 'assignment_score'];
+    inputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', calculateTotal);
+        }
+    });
+});
+
+function calculateTotal() {
+    const midterm = parseFloat(document.getElementById('midterm_score').value) || 0;
+    const final = parseFloat(document.getElementById('final_score').value) || 0;
+    const assignment = parseFloat(document.getElementById('assignment_score').value) || 0;
+    
+    if (midterm > 0 && final > 0 && assignment > 0) {
+        const total = midterm * 0.3 + final * 0.5 + assignment * 0.2;
+        const grade = getLetterGrade(total);
+        
+        document.getElementById('total_score_display').textContent = total.toFixed(2);
+        document.getElementById('grade_letter_display').textContent = grade;
+    }
+}
+
+function getLetterGrade(score) {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    return 'F';
+}
+</script>
+{% endblock %}

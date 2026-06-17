@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 学生信息管理系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> 用户注册</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register') }}">
+                    {{ form.csrf_token if form else '' }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user"></i> 用户名 *
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="3-20个字符" required>
+                            <div class="form-text">用于登录系统</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> 邮箱 *
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="example@email.com" required>
+                            <div class="form-text">用于找回密码和通知</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">
+                            <i class="fas fa-id-card"></i> 姓名 *
+                        </label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" 
+                               placeholder="请输入真实姓名" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i> 密码 *
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="至少6个字符" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="password_confirm" class="form-label">
+                                <i class="fas fa-lock"></i> 确认密码 *
+                            </label>
+                            <input type="password" class="form-control" id="password_confirm" name="password_confirm" 
+                                   placeholder="再次输入密码" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">
+                            <i class="fas fa-phone"></i> 联系电话
+                        </label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                               placeholder="请输入手机号码">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="agree" required>
+                        <label class="form-check-label" for="agree">
+                            我同意 <a href="#" class="text-decoration-none">用户协议</a> 和 <a href="#" class="text-decoration-none">隐私政策</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> 注册账户
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">已有账户？ 
+                        <a href="{{ url_for('login') }}" class="text-decoration-none">
+                            立即登录
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 密码强度检查
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strengthIndicator = document.getElementById('password-strength');
+    
+    if (password.length === 0) {
+        if (strengthIndicator) strengthIndicator.remove();
+        return;
+    }
+    
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    const colors = ['#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997'];
+    const texts = ['很弱', '较弱', '一般', '较强', '很强'];
+    
+    if (!strengthIndicator) {
+        const indicator = document.createElement('div');
+        indicator.id = 'password-strength';
+        indicator.className = 'form-text mt-1';
+        this.parentNode.appendChild(indicator);
+    }
+    
+    const newIndicator = document.getElementById('password-strength');
+    newIndicator.innerHTML = `<i class="fas fa-shield-alt" style="color: ${colors[strength-1] || '#dc3545'}"></i> 密码强度: ${texts[strength-1] || '很弱'}`;
+});
+
+// 密码确认检查
+document.getElementById('password_confirm').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirm = this.value;
+    
+    if (confirm.length === 0) {
+        this.classList.remove('is-valid', 'is-invalid');
+        return;
+    }
+    
+    if (password === confirm) {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    } else {
+        this.classList.remove('is-valid');
+        this.classList.add('is-invalid');
+    }
+});
+
+// 表单验证
+document.querySelector('form').addEventListener('submit', function(e) {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('password_confirm').value;
+    const fullName = document.getElementById('full_name').value.trim();
+    const agree = document.getElementById('agree').checked;
+    
+    if (!username || username.length < 3) {
+        alert('用户名至少需要3个字符');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!email) {
+        alert('请输入邮箱地址');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!fullName) {
+        alert('请输入姓名');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!password || password.length < 6) {
+        alert('密码至少需要6个字符');
+        e.preventDefault();
+        return;
+    }
+    
+    if (password !== confirm) {
+        alert('两次输入的密码不一致');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!agree) {
+        alert('请同意用户协议和隐私政策');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+{% endblock %}
